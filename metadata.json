@@ -1,0 +1,6 @@
+{
+  "name": "Mind protector",
+  "description": "A high-performance mobile focus system with cross-platform lock screen, app limits, custom flow sessions, and aesthetic productivity analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

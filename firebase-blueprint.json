@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Holds persistent identity info and user-specific preferences",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique user authenticated identity ID" },
+        "name": { "type": "string", "description": "Display name of the user profile" },
+        "email": { "type": "string", "description": "Work email address of the user" },
+        "avatarUrl": { "type": "string", "description": "HTTPS URL of the user profile picture" },
+        "joinedDate": { "type": "string", "description": "Date string reflecting account creation" },
+        "marketingPreference": { "type": "boolean", "description": "Preference for feature highlights newsletters" },
+        "cognitiveFocusGoal": { "type": "string", "description": "User focus target e.g. 5 hours a week" }
+      },
+      "required": ["uid", "name", "email", "avatarUrl", "joinedDate"]
+    },
+    "FocusSessionLog": {
+      "title": "FocusSessionLog",
+      "description": "Historical logged performance parameters for a cognitive focus block",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique session ID generated via client or database" },
+        "userId": { "type": "string", "description": "References user profile ownership ID" },
+        "date": { "type": "string", "description": "Readable or timestamp date stamp" },
+        "durationMinutes": { "type": "number", "description": "Length of focus time logged" },
+        "mode": { "type": "string", "description": "Focus block mode: Deep Work, Light Flow, etc." },
+        "status": { "type": "string", "description": "Session outcome e.g. completed or interrupted" },
+        "category": { "type": "string", "description": "Tag or topic e.g. Design, Research, Writing" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "ISO timestamp for data queries sync" }
+      },
+      "required": ["id", "userId", "date", "durationMinutes", "mode", "status"]
+    },
+    "SavedItem": {
+      "title": "SavedItem",
+      "description": "User specific bookmarks, sound configs, or pinned community posts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the bookmarks collection item" },
+        "userId": { "type": "string", "description": "Owner identifier UID reference" },
+        "title": { "type": "string", "description": "Label of the saved element" },
+        "type": { "type": "string", "description": "Type of item: Post, Noise preset, Focus preset" },
+        "tag": { "type": "string", "description": "Category or label" },
+        "createdAt": { "type": "string", "description": "Date string" }
+      },
+      "required": ["id", "userId", "title", "type"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Primary user profile node to preserve settings and preferences"
+    },
+    "/users/{userId}/logs/{logId}": {
+      "schema": "FocusSessionLog",
+      "description": "Cognitive performance entries logged for the individual user"
+    },
+    "/users/{userId}/savedItems/{itemId}": {
+      "schema": "SavedItem",
+      "description": "Bookmarks, pinned materials, or favorite audio frequency presets"
+    }
+  }
+}

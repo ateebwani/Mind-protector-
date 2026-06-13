@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default-deny secure catch-all rule
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable, protective global validation helper primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Entity validation blueprint constraints
+    function isValidUserProfile(profile) {
+      return profile.keys().hasAll(['uid', 'name', 'email', 'avatarUrl', 'joinedDate'])
+        && profile.keys().size() <= 10
+        && profile.uid == request.auth.uid
+        && profile.name is string
+        && profile.name.size() > 0 && profile.name.size() <= 100
+        && profile.email is string
+        && profile.email.size() > 0 && profile.email.size() <= 150
+        && profile.avatarUrl is string;
+    }
+
+    function isValidLog(log) {
+      return log.keys().hasAll(['id', 'userId', 'date', 'durationMinutes', 'mode', 'status'])
+        && log.keys().size() <= 10
+        && log.userId == request.auth.uid
+        && log.id is string
+        && log.durationMinutes is number
+        && log.mode is string
+        && log.status is string;
+    }
+
+    function isValidSavedItem(item) {
+      return item.keys().hasAll(['id', 'userId', 'title', 'type'])
+        && item.keys().size() <= 8
+        && item.userId == request.auth.uid
+        && item.id is string
+        && item.title is string
+        && item.type is string;
+    }
+
+    // Secured paths for the client
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data)
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.joinedDate == resource.data.joinedDate;
+      allow delete: if false;
+
+      match /logs/{logId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(logId) && isValidLog(request.resource.data);
+        allow update: if isOwner(userId) && isValidId(logId) && isValidLog(request.resource.data);
+        allow delete: if isOwner(userId) && isValidId(logId);
+      }
+
+      match /savedItems/{itemId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(itemId) && isValidSavedItem(request.resource.data);
+        allow update: if isOwner(userId) && isValidId(itemId) && isValidSavedItem(request.resource.data);
+        allow delete: if isOwner(userId) && isValidId(itemId);
+      }
+    }
+  }
+}
